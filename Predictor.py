@@ -20,7 +20,6 @@ class Predictor(Estimator.Estimator):
         return self.model.predict(X)
     
     
-    
     def score(self, X, y):
         """This method is used to evaluate the model on the test data.
         Parameters:
@@ -29,7 +28,7 @@ class Predictor(Estimator.Estimator):
         Returns:
         float: The score of the model.
         """
-        return self.model.score(X, y)
+        raise NotImplementedError("The score method has not been implemented.")
     
     def fit_predict(self, X_train, y_train, X_test):
         """This method is used to train the model on the training data and make predictions on the test data.

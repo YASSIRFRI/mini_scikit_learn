@@ -3,11 +3,9 @@ import Estimator
 import Predictor
 
 
-
-
 class DecisionTreeClassifier(Predictor.Predictor, Estimator.Estimator):
     
-    def __init__(self, max_depth=5):
+    def __init__(self, max_depth=1000):
         """This is the constructor of the class.
         Parameters:
         max_depth (int): The maximum depth of the tree.
@@ -29,54 +27,91 @@ class DecisionTreeClassifier(Predictor.Predictor, Estimator.Estimator):
         if not self.is_fitted:
             raise ValueError("The model has not been fitted yet.")
         return np.array([self._predict_tree(x, self.tree) for x in X])
+    
+    def score(self, X, y):
+        """This method is used to evaluate the model on the test data."""
+        y_pred = self.predict(X)
+        return np.mean(y == y_pred)
 
     def _build_tree(self, X, y, depth):
-        if len(y) == 0:
-            return {"class": None}
-        elif self.max_depth is not None and depth == self.max_depth:
-            return {"class": np.argmax(np.bincount(y))}
-        elif len(np.unique(y)) == 1:
-            return {"class": y[0]}
-        else:
-            best_feature, best_threshold = self._best_split(X, y)
-            if best_feature is None:
-                return {"class": np.argmax(np.bincount(y))}
-            left_indices = X[:, best_feature] < best_threshold
-            right_indices = X[:, best_feature] >= best_threshold
-            left_tree = self._build_tree(X[left_indices], y[left_indices], depth + 1)
-            right_tree = self._build_tree(X[right_indices], y[right_indices], depth + 1)
-            return {"feature": best_feature, "threshold": best_threshold, "left": left_tree, "right": right_tree}
+        # Check termination conditions
+        if depth >= self.max_depth or len(np.unique(y)) == 1:
+            return np.argmax(np.bincount(y))  # Return the majority class index
 
-    def _best_split(self, X, y):
-        best_gini = float("inf")
-        best_feature = None
-        best_threshold = None
-        for feature in range(X.shape[1]):
-            thresholds = np.unique(X[:, feature])
+        # Find the best split
+        best_split = self._find_best_split(X, y)
+
+        if best_split is None:
+            return np.argmax(np.bincount(y))  # Return the majority class index if no split found
+
+        feature_index, threshold = best_split
+
+        # Split the data
+        left_indices = X[:, feature_index] < threshold
+        X_left, y_left = X[left_indices], y[left_indices]
+        X_right, y_right = X[~left_indices], y[~left_indices]
+
+        # Recursively build subtrees
+        left_subtree = self._build_tree(X_left, y_left, depth + 1)
+        right_subtree = self._build_tree(X_right, y_right, depth + 1)
+
+        return (feature_index, threshold, left_subtree, right_subtree)
+
+    def _find_best_split(self, X, y):
+        best_entropy_gain = float('-inf')
+        best_split = None
+        n_features = X.shape[1]
+        parent_entropy = self._entropy(y)
+
+        for feature_index in range(n_features):
+            thresholds = np.unique(X[:, feature_index])
             for threshold in thresholds:
-                left_indices = X[:, feature] < threshold
-                right_indices = X[:, feature] >= threshold
-                left_gini = self._gini_impurity(y[left_indices])
-                right_gini = self._gini_impurity(y[right_indices])
-                gini = left_gini + right_gini
-                if gini < best_gini:
-                    best_gini = gini
-                    best_feature = feature
-                    best_threshold = threshold
-        return best_feature, best_threshold
+                left_indices = X[:, feature_index] < threshold
+                left_labels = y[left_indices]
+                right_labels = y[~left_indices]
 
-    def _gini_impurity(self, y):
-        if len(y) == 0:
-            return 0
-        else:
-            probabilities = np.bincount(y) / len(y)
-            return 1 - np.sum(probabilities ** 2)
+                if len(left_labels) == 0 or len(right_labels) == 0:
+                    continue  # Skip if one of the child nodes is empty
+
+                # Calculate entropy for the child nodes
+                entropy_left = self._entropy(left_labels)
+                entropy_right = self._entropy(right_labels)
+
+                # Calculate weighted average entropy
+                weight_left = len(left_labels) / len(y)
+                weight_right = len(right_labels) / len(y)
+                weighted_avg_entropy = weight_left * entropy_left + weight_right * entropy_right
+
+                # Calculate entropy gain
+                entropy_gain = parent_entropy - weighted_avg_entropy
+
+                if entropy_gain > best_entropy_gain:
+                    best_entropy_gain = entropy_gain
+                    best_split = (feature_index, threshold)
+
+        return best_split
+
+    def _entropy(self, labels):
+        class_probabilities = [len(labels[labels == c]) / len(labels) for c in np.unique(labels)]
+        entropy = -np.sum(p * np.log2(p) for p in class_probabilities if p > 0)
+        return entropy
+
+    def _gini_impurity(self, left_labels, right_labels):
+        total_samples = len(left_labels) + len(right_labels)
+        p_left = len(left_labels) / total_samples
+        p_right = len(right_labels) / total_samples
+        gini_left = 1 - sum((np.mean(left_labels == c) ** 2 for c in set(left_labels)))
+        gini_right = 1 - sum((np.mean(right_labels == c) ** 2 for c in set(right_labels)))
+
+        gini_impurity = p_left * gini_left + p_right * gini_right
+        return gini_impurity
 
     def _predict_tree(self, x, tree):
-        if "class" in tree:
-            return tree["class"]
-        else:
-            if x[tree["feature"]] < tree["threshold"]:
-                return self._predict_tree(x, tree["left"])
+        if isinstance(tree, np.int64):  
+            return tree
+        else:  
+            feature_index, threshold, left_subtree, right_subtree = tree
+            if x[feature_index] < threshold:
+                return self._predict_tree(x, left_subtree)
             else:
-                return self._predict_tree(x, tree["right"])
+                return self._predict_tree(x, right_subtree)

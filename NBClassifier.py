@@ -57,5 +57,4 @@ class NBClassifier(Predictor.Predictor, Estimator.Estimator):
             y_pred[i] = np.argmax(posteriors)
         return y_pred
     
-    
         
