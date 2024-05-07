@@ -1,60 +1,58 @@
-import Estimator
 import numpy as np
-import Predictor
 
-
-
-class NBClassifier(Predictor.Predictor, Estimator.Estimator):
-    
+class NBClassifier:
     def __init__(self):
-        """This is the constructor of the class.
-        """
-        self.class_priors = None
-        self.class_conditional
-        
+        """Constructor for the Gaussian Naive Bayes Classifier."""
+        self.classes = None
+        self.class_statistics = {}
+        self.class_priors = {}
+    
     def fit(self, X, y):
-        """This method is used to train the model on the training data.
+        """Fit the Gaussian Naive Bayes model according to the given training data.
+        
         Parameters:
-        X (numpy.ndarray): The training data.
-        y (numpy.ndarray): The target values.
+        X (numpy.ndarray): Training data.
+        y (numpy.ndarray): Target labels.
+        
         Returns:
-        self: The trained model.
+        self: Fitted estimator.
         """
-        self.class_priors = np.bincount(y) / len(y)
-        self.class_conditional = []
-        for i in range(len(np.unique(y))):
-            X_class = X[y == i]
-            self.class_conditional
-            for j in range(X.shape[1]):
-                self.class_conditional
-                self.class_conditional
+        self.classes = np.unique(y)
+        for cls in self.classes:
+            cls_indices = (y == cls)
+            cls_X = X[cls_indices]
+            self.class_statistics[cls] = {
+                'mean': np.mean(cls_X, axis=0),
+                'std': np.std(cls_X, axis=0) + 1e-3  # Add a small value to avoid division by zero
+            }
+            self.class_priors[cls] = np.mean(cls_indices)
         return self
     
-    def get_params(self):
-        """This method is used to get the parameters of the model.
-        Returns:
-        dict: The parameters of the model.
-        """
-        return {}
+    def _calculate_likelihood(self, x, mean, std):
+        """Calculate the likelihood of feature values given class parameters."""
+        exponent = -0.5 * ((x - mean) / std) ** 2
+        return np.exp(exponent) / (np.sqrt(2 * np.pi) * std)
+    
+    def _calculate_class_posteriors(self, x):
+        """Calculate posteriors for all classes given feature values."""
+        posteriors = {}
+        for cls in self.classes:
+            mean, std = self.class_statistics[cls]['mean'], self.class_statistics[cls]['std']
+            likelihood = self._calculate_likelihood(x, mean, std)
+            prior = self.class_priors[cls]
+            posteriors[cls] = prior * np.prod(likelihood) 
+        return posteriors
     
     def predict(self, X):
-        """This method is used to make predictions on the test data.
-        Parameters:
-        X (numpy.ndarray): The test data.
-        Returns:
-        numpy.ndarray: The predictions.
-        """
-        y_pred = np.zeros(X.shape[0])
-        for i in range(X.shape[0]):
-            posteriors = []
-            for j in range(len(np.unique(y))):
-                prior = self.class_priors[j]
-                likelihood = 1
-                for k in range(X.shape[1]):
-                    likelihood *= self.class_conditional[j][k][X[i, k]]
-                posterior = prior * likelihood
-                posteriors.append(posterior)
-            y_pred[i] = np.argmax(posteriors)
-        return y_pred
-    
+        """Perform classification on an array of test vectors X.
         
+        Parameters:
+        X (numpy.ndarray): Test data.
+        
+        Returns:
+        numpy.ndarray: Predicted class labels.
+        """
+        if self.classes is None:
+            raise ValueError("Classifier not fitted yet.")
+        predictions = [max(self._calculate_class_posteriors(x), key=self._calculate_class_posteriors(x).get) for x in X]
+        return np.array(predictions)
