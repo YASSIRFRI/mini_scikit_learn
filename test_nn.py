@@ -46,11 +46,13 @@ sklearn_nn_predictions_wine = sklearn_nn_wine.predict(X_wine_test)
 sklearn_nn_accuracy_wine = accuracy_score(y_wine_test, sklearn_nn_predictions_wine)
 print("Scikit-learn MLPClassifier Accuracy (Wine):", sklearn_nn_accuracy_wine)
 
-your_nn_digits = NeuralNetwork(layers=((Dense(64), ReLU()),(Dense(64), ReLU()), (Dense(1), Sigmoid())), loss=BinaryCrossEntropy(), optimizer=Adam(learning_rate=0.01), regularization_factor=2.0)
-your_nn_digits.fit(X_digits_train, y_digits_train,epochs=20)
+your_nn_digits = NeuralNetwork()
+X_digits_train = X_digits_train.T
+X_digits_test = X_digits_test.T
+y_digits_train = y_digits_train.reshape(1, len(y_digits_train))
+y_digits_test = y_digits_test.reshape(1, len(y_digits_test))
+your_nn_digits.fit(X_digits_train, y_digits_train, layer_dims=[X_digits_train.shape[0], 100, 10], epoch=1000, learning_rate=0.01, minibatch_size=64)
 your_nn_predictions_digits = your_nn_digits.predict(X_digits_test)
-print(your_nn_predictions_digits)
-print(y_digits_test)
 your_nn_accuracy_digits = accuracy_score(y_digits_test, your_nn_predictions_digits)
 print("Your NeuralNetwork Accuracy (Digits):", your_nn_accuracy_digits)
 

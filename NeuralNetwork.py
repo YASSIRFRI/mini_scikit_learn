@@ -1,139 +1,148 @@
-import numpy as np
+import math
+import time 
+import random 
 
-class DNN:
-    """
-    Structure: A Feedforward Neural Network
-    Optimization: Gradient Descent Algorithm
-    """
-    def __init__(self, binary_classification=True) -> None:
-        self.cost_during_training = []
-        self.binary_classification = binary_classification
+class Layer:
+    def __init__(self, input_size, output_size , activation_function):
+        self.input = None
+        self.output = []
+        self.weights = []
+        self.activation_function = activation_function
+        ##nested loop to initailze the weigths with random values
+        for i in range(input_size):
+          col = []
+          for j in range(output_size):
+              col.append(random.random())
+          self.weights.append(col)
 
-    def train(self, X_train, Y_train, layer_dims, epoch=1_000, learning_rate=0.001, minibatch_size=64):
-        """
-        Train the neural network with given parameters and data X, Y
-        layer_dims: list of # of units in hidden layers
-        """
-
-        layer_dims.insert(0, X_train.shape[0])
-        layer_dims.append((1 if self.binary_classification else Y_train.shape[0]))
-        self.layer_dims = layer_dims
-        parameters = self.initialize_parameters()
-        self.minibatch_size = minibatch_size
-
-        for i in range(epoch):
-            for batch_idx in range(0, int(X_train.shape[1] / minibatch_size)):
-                # Mini Batch Samples
-                if batch_idx == int(X_train.shape[1] / minibatch_size):
-                    X = X_train[:, batch_idx*minibatch_size:]
-                    Y = Y_train[:, batch_idx*minibatch_size:]
-                else:
-                    X = X_train[:, batch_idx*minibatch_size: (batch_idx+1)*minibatch_size]
-                    Y = Y_train[:, batch_idx*minibatch_size: (batch_idx+1)*minibatch_size]
-
-                # Forward prop and output of the last layer
-                forward_vars = self.forward_prop(parameters, X)
-                predictions = forward_vars["A"+str(len(layer_dims)-1)]
-
-                # Cost function is applied
-                cost_val = self.cost(predictions, Y)
-                self.cost_during_training.append(cost_val)
-                
-                # Backpropagation for calculating gradients and updating parameters
-                gradients = self.backward_prop(parameters, forward_vars, Y)
-                parameters = self.update_parameters(parameters, gradients, learning_rate)
-
-        self.learned_parameters = parameters
-
-    def predict(self, X):
-        """Predict labels for given data X"""
+    def forward_propagation(self, given_input  ):
+        self.input = given_input
+        self.output = []
+        for col in range(len(self.weights[0])):
+            sum = 0 
+            for i in range(len(self.input) ):
+                sum += self.input[i] * self.weights[i][col]
+            if self.activation_function == "sigmoid" :
+                self.output.append( 1/ (  1+(math.exp(-sum)) ))
+            elif self.activation_function == "tanh" :
+                self.output.append( math.tanh(sum))
+        return self.output
         
-        forward_vars = self.forward_prop(self.learned_parameters, X)
-        L = len(self.layer_dims) - 1
-
-        return forward_vars["A"+str(L)]
-
-    def initialize_parameters(self):
-        """Initialize parameters with He initialization method"""
+    def back_propagation(self, previous_errors, learning_rate , targets):
         
-        parameters = {}
-        for l in range(1, len(self.layer_dims)):
-            parameters["W"+str(l)] = np.random.randn(self.layer_dims[l], self.layer_dims[l-1]) * np.sqrt(2/self.layer_dims[l-1])
-            parameters["b"+str(l)] = np.zeros((self.layer_dims[l], 1))
+        upcoming_error = []
+        for i in range( len(self.input)):
+            upcoming_error.append(0)
 
-        return parameters
+        if len(previous_errors) == 0 :
+            for cur_neuron in range ( len(self.output) ) :
+                delta_j = ( targets[cur_neuron] - self.output[cur_neuron] ) * self.output[cur_neuron]  * (1-self.output[cur_neuron])
 
-    def forward_prop(self, parameters, X):
-        """Propagate forward in network"""
-        
-        forward_vars = {"A0": X}
+                for upcoming_nueron in range( len( self.input) ) :
+                    upcoming_error[upcoming_nueron] += delta_j * self.weights[upcoming_nueron][cur_neuron] 
+                    self.weights[upcoming_nueron][cur_neuron] += ( delta_j * self.input[upcoming_nueron] * learning_rate)
 
-        for l in range(1, len(self.layer_dims)):
-            forward_vars["Z"+str(l)] = np.dot(parameters["W"+str(l)], forward_vars["A"+str(l-1)]) + parameters["b"+str(l)]
+        else :
+            for cur_neuron in range ( len(self.output) ) :
+                delta_j = previous_errors[cur_neuron] * self.output[cur_neuron]  * (1-self.output[cur_neuron]) 
+                for upcoming_nueron in range( len ( self.input) ) :
+                    upcoming_error[upcoming_nueron] += delta_j * self.weights[upcoming_nueron][cur_neuron] 
+                    self.weights[upcoming_nueron][cur_neuron] += delta_j * learning_rate * self.input[upcoming_nueron]
+                    
+        return upcoming_error
             
-            # As Activation Function: Apply relu in hidden layers, and in the output layer if binary then sigmoid else softmax
-            if l < len(self.layer_dims) - 1:
-                forward_vars["A"+str(l)] = self.relu(forward_vars["Z"+str(l)])
-            elif self.binary_classification:
-                forward_vars["A"+str(l)] = self.sigmoid(forward_vars["Z"+str(l)])
-            else:
-                forward_vars["A"+str(l)] = self.softmax(forward_vars["Z"+str(l)])
 
-        return forward_vars
+class NeuralNetwork:
+    def __init__(self):
+        self.layers = []
 
-    def backward_prop(self, parameters, forward_vars, Y):
-        """Propagate backward in the network with calculating gradients"""
-        gradients = {}
+    def add(self, layer ):
+        self.layers.append(layer )
 
-        L = len(self.layer_dims) - 1
 
-        for l in range(L, 0, -1):
-            m = forward_vars["A"+str(l-1)].shape[1]
-            if l == L and self.binary_classification:
-                gradients["dA"+str(l)] = -np.divide(Y, forward_vars["A"+str(l)]) + np.divide((1-Y), (1-forward_vars["A"+str(l)]))
-                sigmoid_derivative = forward_vars["A"+str(l)] * (1 - forward_vars["A"+str(l)])
-                gradients["dZ"+str(l)] = np.multiply(gradients["dA"+str(l)], sigmoid_derivative)
-            elif l == L: # Compute derivatives if multi class classification
-                gradients["dZ"+str(l)] = forward_vars["A"+str(l)] - Y # derivatives for the last softmax layer
-            else:
-                relu_derivative = forward_vars["A"+str(l)] > 0
-                gradients["dZ"+str(l)] = np.multiply(gradients["dA"+str(l)], relu_derivative)
-            
-            gradients["dW"+str(l)] = (1/m) * np.dot(gradients["dZ"+str(l)], forward_vars["A"+str(l-1)].T)
-            gradients["db"+str(l)] = (1/m) * np.sum(gradients["dZ"+str(l)], axis=1, keepdims=True)
-            gradients["dA"+str(l-1)] = np.dot(parameters["W"+str(l)].T, gradients["dZ"+str(l)])
-
-        return gradients
-
-    def cost(self, Y_hat, Y):
-        """
-        Log Loss is applied
-        """
+    def predict(self, input_data):
         
-        m = Y.shape[1]
-        if self.binary_classification: 
-            cost_value = (1/m) * np.sum(-(Y*np.log(Y_hat) + (1-Y)*np.log(1-Y_hat)))
+        predicted = []
+        for i in range( len(input_data) ):
+            output = input_data[i]
+            for layer in self.layers:
+                output = layer.forward_propagation(output )
+            predicted.append(output)
+
+        return predicted
+
+
+    def fit(self, train_data, train_labels, epochs, learning_rate):
+        
+        samples = len(train_data)
+
+        # training loop
+        for epoch in range(epochs):
+            for sample in range(samples):
+                cur_deltas = []
+                output = train_data[sample]
+                for layer in self.layers:
+                    output = layer.forward_propagation(output )
+
+
+                for layer in reversed(self.layers):
+                    cur_deltas = layer.back_propagation(cur_deltas, learning_rate , train_labels[sample])
+x_train = [ [0,0] , [0,1] , [1,0] , [1,1] ]
+y_train = [[0], [1], [1], [0]]
+NN = NeuralNetwork()
+NN.add(Layer(2, 3 , "tanh"))
+NN.add(Layer(3, 1 , "tanh"))
+
+NN.fit(x_train, y_train, epochs=1000, learning_rate=0.1)
+predicted = NN.predict(x_train)
+print(predicted)
+
+train_points_1 = [ [1.0 , 2.] , [ 11.,8. ] , [ 0.5 , 0.2 ] , [ 2. , 0.8 ] , [12. , 6. ] , [11. , 7.] ]
+train_labels_1 = [ [0] , [0] , [0] , [0] , [0] , [0] ]
+
+
+train_points_2 = [ [1,7.5] , [10 , 2 ] , [ 3 , 8.5 ] , [ 2 , 9.2  ] , [11 , 1 ] , [9.6 , 3] ]
+train_labels_2 = [ [1] , [1] , [1] , [1] , [1] , [1] ]
+
+NN_2 = NeuralNetwork()
+NN_2.add(Layer(2, 4 , "sigmoid"))
+NN_2.add(Layer(4, 4 , "sigmoid"))
+NN_2.add(Layer(4, 1 , "sigmoid"))
+NN_2.add(Layer(1, 1, "sigmoid"))
+
+NN_2.fit(train_points_1, train_labels_1, epochs=1000, learning_rate= 0.08)
+
+NN_2.predict(train_points_1)
+NN_2.fit(train_points_2, train_labels_2, epochs=1000, learning_rate= 0.08)
+
+# test
+predicted=NN_2.predict(train_points_2)
+print(predicted)
+
+NN_2.fit(train_points_1, train_labels_1, epochs=1000, learning_rate= 0.08)
+predicted=NN_2.predict(train_points_1)
+print(predicted)
+
+NN_2.fit(train_points_2, train_labels_2, epochs=1000, learning_rate= 0.08)
+predicted=NN_2.predict(train_points_2)
+print(predicted)
+
+
+
+def accuracy_score(predictions, targets):
+    print(predictions)
+    print(targets)
+    correct = 0
+    for i in range(len(predictions)):
+        if predictions[i][0] >= 0.5:
+            prediction = 1
         else:
-            cost_value = (1/m) * np.sum((-1)*Y*np.log(Y_hat))
+            prediction = 0
+        if prediction == targets[i][0]:
+            correct += 1
+    accuracy = correct / len(predictions)
+    return accuracy
 
-        return cost_value
+accuracy = accuracy_score(predicted, train_labels_2)
+print("Accuracy:", accuracy)
 
-    def update_parameters(self, parameters, gradients, learning_rate):
-        """Update parameters with gradients"""
-        
-        for l in range(1, len(self.layer_dims)):
-            parameters["W"+str(l)] -= learning_rate * gradients["dW"+str(l)]
-            parameters["b"+str(l)] -= learning_rate * gradients["db"+str(l)]
-
-        return parameters
-
-    def sigmoid(self, Z):
-        return 1 / (1 + np.exp(-Z))
-    
-    def relu(self, Z):
-        return np.maximum(0, Z)
-    
-    def softmax(self, Z):
-        T = np.exp(Z)
-        T_sum = np.sum(T, axis=0)
-        return np.divide(T, T_sum)
