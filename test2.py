@@ -1,7 +1,7 @@
 from sklearn.datasets import load_digits
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.model_selection import train_test_split
-from NN import Network, Layer  # Ensure your custom neural network code is imported correctly
+from NN import Network, Layer 
 import numpy as np 
 # Load Digits data
 digits = load_digits()
@@ -13,8 +13,8 @@ y = digits.target.reshape(-1, 1)
 subset_fraction = 0.3
 subset_size = int(X.shape[0] * subset_fraction)
 indices = np.random.choice(X.shape[0], subset_size, replace=False)
-X_subset = X[indices]
-y_subset = y[indices]
+X_subset =X
+y_subset =y
 
 # Normalize features
 scaler = StandardScaler()
@@ -23,17 +23,17 @@ X_scaled = scaler.fit_transform(X_subset)
 # One-hot encode labels
 encoder = OneHotEncoder()
 y_encoded = encoder.fit_transform(y_subset).toarray()
+print(y_encoded.shape)
 
-# Split the data
-X_train, X_test, y_train, y_test = train_test_split(X_scaled, y_encoded, test_size=0.3, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y_encoded, test_size=0.2, random_state=42)
 
 # Define your neural network structure
 network = Network()
-network.add(Layer(64, 50, 'sigmoid'))  # Hidden layer with 50 neurons
-network.add(Layer(50, 10, 'sigmoid'))  # Output layer with 10 neurons
+network.add(Layer(64, 64, 'sigmoid'))  # Hidden layer with 50 neurons
+network.add(Layer(64, 10, 'sigmoid'))  # Output layer with 10 neurons
 
 # Train the network
-network.fit(X_train, y_train, epochs=100, learning_rate=0.01)
+network.fit(X_train, y_train, epochs=1000, learning_rate=0.01)
 
 # Predictions
 predictions = network.predict(X_test)
