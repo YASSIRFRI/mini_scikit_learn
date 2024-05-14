@@ -56,3 +56,17 @@ class NBClassifier:
             raise ValueError("Classifier not fitted yet.")
         predictions = [max(self._calculate_class_posteriors(x), key=self._calculate_class_posteriors(x).get) for x in X]
         return np.array(predictions)
+    
+    
+    def score(self, X, y):
+        """Return the mean accuracy on the given test data and labels.
+        
+        Parameters:
+        X (numpy.ndarray): Test data.
+        y (numpy.ndarray): True labels for X.
+        
+        Returns:
+        float: Mean accuracy of self.predict(X) wrt. y.
+        """
+        y_pred = self.predict(X)
+        return np.mean(y == y_pred)
