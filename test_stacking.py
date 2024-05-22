@@ -7,6 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from ModelEnsembler import StackingEnsembler
 from KnnEstimator import KnnEstimator
+from DecisionTree import DecisionTreeClassifier
 import numpy as np
 
 # Load the datasets
@@ -26,15 +27,17 @@ X_iris_train, X_iris_test, y_iris_train, y_iris_test = train_test_split(X_iris, 
 base_models = [
     KnnEstimator(n_neighbors=5),
     NBClassifier(),
-    RandomForestClassifier(n_estimators=100, max_depth=10)
+    DecisionTreeClassifier(),
 ]
 
 # Define meta model
-meta_model = RandomForestClassifier(n_estimators=100, max_depth=10)
+#meta_model = RandomForestClassifier(n_estimators=10)
+meta_model= LogisticRegression(max_iter=10000)
 
 # Train and test StackingEnsembler for digits dataset
 stacking_ensembler_digits = StackingEnsembler(base_models, meta_model)
 stacking_ensembler_digits.fit(X_digits_train, y_digits_train)
+print(stacking_ensembler_digits.score(X_digits_train, y_digits_train))
 stacking_score_digits = accuracy_score(y_digits_test, stacking_ensembler_digits.predict(X_digits_test))
 print("StackingEnsembler Score (Digits):", stacking_score_digits)
 

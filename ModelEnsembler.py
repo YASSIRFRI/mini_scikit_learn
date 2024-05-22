@@ -43,6 +43,7 @@ class VotingEnsembler(Predictor.Predictor, Estimator.Estimator):
     def fit(self, X, y):
         for model in self.models:
             model.fit(X, y)
+            print(model.predict(X).shape)
             print(model.score(X, y))
         self.is_fitted = True
         return self
@@ -110,7 +111,11 @@ class StackingEnsembler(Predictor.Predictor, Estimator.Estimator):
             model.fit(X, y)
             print(model.score(X, y))
         X_meta = np.array([model.predict(X) for model in self.base_models]).T
-        self.meta_model.fit(X_meta, y)
+        print("X_meta shape")
+        print(X_meta.shape)
+        self.meta_model.fit(X_meta, y,lr=0.001)
+        print("Meta model score")
+        print(self.meta_model.score(X_meta, y))
         self.is_fitted = True
         return self
 
@@ -118,7 +123,12 @@ class StackingEnsembler(Predictor.Predictor, Estimator.Estimator):
         if not self.is_fitted:
             raise ValueError("The model has not been fitted yet.")
         X_meta = np.array([model.predict(X) for model in self.base_models]).T
-        return self.meta_model.predict(X_meta)
+        answer=self.meta_model.predict(X_meta)
+        print("Answer shape")
+        print(answer.shape)
+        print("Answer")
+        print(answer)
+        return answer
 
     def score(self, X, y):
         """This method is used to evaluate the model on the test data."""

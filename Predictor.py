@@ -1,6 +1,5 @@
 import Estimator
 
-
 class Predictor(Estimator.Estimator):
     
     def __init__(self, model=None):

@@ -27,18 +27,18 @@ X_iris_train, X_iris_test, y_iris_train, y_iris_test = train_test_split(X_iris, 
 models = [
     KnnEstimator(n_neighbors=5),
     NBClassifier(),
-    RandomForestClassifier(n_estimators=100, max_depth=10)
+    LogisticRegression(max_iter=10000),
 ]
 
 voting_ensembler_digits = VotingEnsembler(models)
 voting_ensembler_digits.fit(X_digits_train, y_digits_train)
-voting_score_digits = accuracy_score(y_digits_test, voting_ensembler_digits.predict(X_digits_test))
+voting_score_digits = voting_ensembler_digits.score(X_digits_test, y_digits_test)
 print("VotingEnsembler Score (Digits):", voting_score_digits)
 
 # Train and test VotingEnsembler for iris dataset
 voting_ensembler_iris = VotingEnsembler(models)
 voting_ensembler_iris.fit(X_iris_train, y_iris_train)
-voting_score_iris = accuracy_score(y_iris_test, voting_ensembler_iris.predict(X_iris_test))
+voting_score_iris=voting_ensembler_iris.score(X_iris_test, y_iris_test)
 print("VotingEnsembler Score (Iris):", voting_score_iris)
 
 # Train and test scikit-learn's RandomForestClassifier model for digits dataset
