@@ -53,3 +53,4 @@ class Network:
         predicted_classes = np.argmax(predictions, axis=1)
         actual_classes = np.argmax(test_labels, axis=1)
         return np.mean(predicted_classes == actual_classes)
+
