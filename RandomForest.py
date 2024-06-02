@@ -1,7 +1,7 @@
 import numpy as np
-import Estimator
-import Predictor
-from DecisionTree import DecisionTreeClassifier, DecisionTreeRegressor
+from . import Estimator
+from . import Predictor
+from .DecisionTree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.utils import resample
 
 class RandomForestClassifier(Predictor.Predictor, Estimator.Estimator):
@@ -74,16 +74,13 @@ class RandomForestClassifier(Predictor.Predictor, Estimator.Estimator):
                     if len(left_labels) == 0 or len(right_labels) == 0:
                         continue  # Skip if one of the child nodes is empty
                     
-                    # Calculate entropy for the child nodes
                     entropy_left = self._entropy(left_labels)
                     entropy_right = self._entropy(right_labels)
                     
-                    # Calculate weighted average entropy
                     weight_left = len(left_labels) / len(y)
                     weight_right = len(right_labels) / len(y)
                     weighted_avg_entropy = weight_left * entropy_left + weight_right * entropy_right
                     
-                    # Calculate entropy gain
                     entropy_gain = parent_entropy - weighted_avg_entropy
                     
                     if entropy_gain > best_entropy_gain:
@@ -255,3 +252,10 @@ class RandomForestRegressor:
         """
         y_pred = self.predict(X)
         return -mean_squared_error(y, y_pred)
+    
+    
+    def set_params(self, **params):
+        """Set the parameters of the model."""
+        for param, value in params.items():
+            setattr(self, param, value)
+        return self

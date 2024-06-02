@@ -31,6 +31,7 @@ class Estimator:
         Parameters:
         **params: The parameters of the model.
         """
-        raise NotImplementedError("The set_params method is not implemented.")
+        for param, value in params.items():
+            setattr(self, param, value)
     
         

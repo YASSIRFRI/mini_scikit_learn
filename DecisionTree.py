@@ -1,9 +1,9 @@
 import numpy as np
-import Estimator
-import Predictor
+from .Estimator import Estimator
+from .Predictor import Predictor
 
 
-class DecisionTreeClassifier(Predictor.Predictor, Estimator.Estimator):
+class DecisionTreeClassifier(Predictor, Estimator):
     
     def __init__(self, max_depth=1000):
         """This is the constructor of the class.
@@ -125,7 +125,7 @@ class DecisionTreeClassifier(Predictor.Predictor, Estimator.Estimator):
 
 
 
-class DecisionTreeRegressor(Predictor.Predictor, Estimator.Estimator):
+class DecisionTreeRegressor(Predictor, Estimator):
     
     def __init__(self, max_depth=1000):
         """This is the constructor of the class.

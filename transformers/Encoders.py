@@ -67,3 +67,4 @@ class LabelEncoder(Encoder):
     
     def transform(self, X):
         return np.array([self.class_to_index[item] for item in X])
+

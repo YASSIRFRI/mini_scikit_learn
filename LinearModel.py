@@ -1,6 +1,6 @@
 import numpy as np
-import Predictor
-import Estimator
+from . import Estimator
+from . import Predictor
 from numpy import log, dot, exp, shape
 import matplotlib.pyplot as plt
 from sklearn.datasets import make_classification
@@ -90,7 +90,8 @@ class LinearRegression(LinearModel):
         Parameters:
         **params: The parameters of the model.
         """
-        self.model.fit_intercept = params["fit_intercept"]
+        for param, value in params.items():
+            setattr(self, param, value)
         return self
     
     

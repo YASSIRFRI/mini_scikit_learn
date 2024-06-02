@@ -1,8 +1,8 @@
 import numpy as np
-import Estimator
-import Predictor
+from  .Estimator import Estimator
+from .Predictor import Predictor
 
-class KnnEstimator(Predictor.Predictor, Estimator.Estimator):
+class KNNEstimator(Predictor, Estimator):
     
     def __init__(self, n_neighbors=5, p=2):
         """This is the constructor of the class.
@@ -63,3 +63,6 @@ class KnnEstimator(Predictor.Predictor, Estimator.Estimator):
         """
         y_pred = self.predict(X)
         return np.mean(y == y_pred)
+
+
+

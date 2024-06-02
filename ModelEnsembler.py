@@ -1,6 +1,6 @@
-import Estimator
 import numpy as np
-import Predictor
+from . import Estimator
+from . import Predictor
 
 
 class ModelEnsembler(Predictor.Predictor, Estimator.Estimator):
@@ -106,28 +106,41 @@ class StackingEnsembler(Predictor.Predictor, Estimator.Estimator):
         self.is_fitted = False
         super().__init__(self)
 
-    def fit(self, X, y):
+    def fit(self, X, y, n_iterations=1000):
+        """
+        
+        This method is used to train the model on the training data.
+        Parameters:
+        X (numpy.ndarray): The training data.
+        y (numpy.ndarray): The target values.
+        Returns:
+        self: The trained model.
+        
+        """
         for model in self.base_models:
             model.fit(X, y)
+            print("Accuracy of Model: ",base_models.index(model))
             print(model.score(X, y))
         X_meta = np.array([model.predict(X) for model in self.base_models]).T
-        print("X_meta shape")
-        print(X_meta.shape)
-        self.meta_model.fit(X_meta, y,lr=0.001)
+        self.meta_model.fit(X_meta, y)
         print("Meta model score")
         print(self.meta_model.score(X_meta, y))
         self.is_fitted = True
         return self
 
     def predict(self, X):
+        """
+        This method is used to make predictions on the test data.
+        Parameters:
+        X (numpy.ndarray): The test data.
+        Returns:
+        numpy.ndarray: The predictions.
+        
+        """
         if not self.is_fitted:
             raise ValueError("The model has not been fitted yet.")
         X_meta = np.array([model.predict(X) for model in self.base_models]).T
         answer=self.meta_model.predict(X_meta)
-        print("Answer shape")
-        print(answer.shape)
-        print("Answer")
-        print(answer)
         return answer
 
     def score(self, X, y):

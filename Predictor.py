@@ -1,6 +1,5 @@
-import Estimator
-
-class Predictor(Estimator.Estimator):
+from .Estimator import Estimator
+class Predictor(Estimator):
     
     def __init__(self, model=None):
         """This is the constructor of the class.
@@ -40,6 +39,7 @@ class Predictor(Estimator.Estimator):
         """
         self.model.fit(X_train, y_train)
         return self.predict(X_test)
+    
     
     
     

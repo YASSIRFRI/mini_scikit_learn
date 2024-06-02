@@ -22,7 +22,7 @@ class Layer:
         self.weights += learning_rate * np.outer(self.input, delta)
         return upcoming_error
 
-class Network:
+class NeuralNetwork:
     def __init__(self):
         self.layers = []
 

@@ -1,4 +1,4 @@
-from KnnEstimator import KnnEstimator
+from KnnEtimator import KNNEstimator
 from sklearn.datasets import load_digits, load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier as SklearnKNeighborsClassifier
@@ -15,15 +15,15 @@ X_digits_train, X_digits_test, y_digits_train, y_digits_test = train_test_split(
 
 X_iris_train, X_iris_test, y_iris_train, y_iris_test = train_test_split(X_iris, y_iris, test_size=0.2, random_state=42)
 
-your_model_digits = KnnEstimator()  # Use k=5 as an example
+your_model_digits = KNNEstimator()  # Use k=5 as an example
 your_model_digits.fit(X_digits_train, y_digits_train)
 your_score_digits = your_model_digits.score(X_digits_test, y_digits_test)
-print("Your KnnEstimator Score (Digits):", your_score_digits)
+print("Your KNNEstimator Score (Digits):", your_score_digits)
 
-your_model_iris = KnnEstimator()  # Use k=5 as an example
+your_model_iris = KNNEstimator()  # Use k=5 as an example
 your_model_iris.fit(X_iris_train, y_iris_train)
 your_score_iris = your_model_iris.score(X_iris_test, y_iris_test)
-print("Your KnnEstimator Score (Iris):", your_score_iris)
+print("Your KNNEstimator Score (Iris):", your_score_iris)
 
 sklearn_model_digits = SklearnKNeighborsClassifier(n_neighbors=5)  # Use n_neighbors=5 as an example
 sklearn_model_digits.fit(X_digits_train, y_digits_train)
