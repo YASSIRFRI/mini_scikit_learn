@@ -5,18 +5,37 @@ from .DecisionTree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.utils import resample
 
 class RandomForestClassifier(Predictor.Predictor, Estimator.Estimator):
-    
+    """
+    Random Forest Classifier.
+
+    Parameters:
+    -----------
+    n_estimators : int, optional (default=100)
+        The number of trees in the forest.
+    max_depth : int, optional (default=1000)
+        The maximum depth of the trees.
+    max_features : str or int, optional (default='sqrt')
+        The number of features to consider when looking for the best split:
+        - If int, then consider `max_features` features at each split.
+        - If 'sqrt', then consider `sqrt(n_features)` features at each split.
+        - If 'log2', then consider `log2(n_features)` features at each split.
+
+    Attributes:
+    -----------
+    n_estimators : int
+        The number of trees in the forest.
+    max_depth : int
+        The maximum depth of the trees.
+    max_features : str or int
+        The number of features to consider when looking for the best split.
+    trees : list
+        List of decision trees in the forest.
+    is_fitted : bool
+        Indicates whether the model has been fitted.
+    """
+
     def __init__(self, n_estimators=100, max_depth=1000, max_features='sqrt'):
-        """Random Forest Classifier.
-        
-        Parameters:
-        n_estimators (int): The number of trees in the forest.
-        max_depth (int): The maximum depth of the trees.
-        max_features (str or int): The number of features to consider when looking for the best split:
-            - If int, then consider `max_features` features at each split.
-            - If 'sqrt', then consider `sqrt(n_features)` features at each split.
-            - If 'log2', then consider `log2(n_features)` features at each split.
-        """
+        """Initialize the Random Forest Classifier."""
         self.n_estimators = n_estimators
         self.max_depth = max_depth
         self.max_features = max_features
@@ -25,11 +44,15 @@ class RandomForestClassifier(Predictor.Predictor, Estimator.Estimator):
         super().__init__(self)
 
     def fit(self, X, y):
-        """Fit the random forest model.
-        
+        """
+        Fit the random forest model.
+
         Parameters:
-        X (np.ndarray): Training data.
-        y (np.ndarray): Training labels.
+        -----------
+        X : np.ndarray
+            Training data.
+        y : np.ndarray
+            Training labels.
         """
         self.trees = []
         n_samples, n_features = X.shape
@@ -42,10 +65,7 @@ class RandomForestClassifier(Predictor.Predictor, Estimator.Estimator):
             max_features = self.max_features
         
         for _ in range(self.n_estimators):
-            # Bootstrap sample
             X_sample, y_sample = resample(X, y)
-            
-            # Create and train a decision tree
             tree = DecisionTreeClassifier(max_depth=self.max_depth)
             tree._find_best_split = self._get_find_best_split(max_features)
             tree.fit(X_sample, y_sample)
@@ -72,7 +92,7 @@ class RandomForestClassifier(Predictor.Predictor, Estimator.Estimator):
                     right_labels = y[~left_indices]
                     
                     if len(left_labels) == 0 or len(right_labels) == 0:
-                        continue  # Skip if one of the child nodes is empty
+                        continue
                     
                     entropy_left = self._entropy(left_labels)
                     entropy_right = self._entropy(right_labels)
@@ -98,55 +118,77 @@ class RandomForestClassifier(Predictor.Predictor, Estimator.Estimator):
         return entropy
 
     def predict(self, X):
-        """Predict class for X.
-        
+        """
+        Predict class for X.
+
         Parameters:
-        X (np.ndarray): Test data.
-        
+        -----------
+        X : np.ndarray
+            Test data.
+
         Returns:
-        np.ndarray: Predicted classes.
+        --------
+        np.ndarray
+            Predicted classes.
         """
         if not self.is_fitted:
             raise ValueError("The model has not been fitted yet.")
         
         tree_predictions = np.array([tree.predict(X) for tree in self.trees])
-        # Majority vote
         majority_vote = np.apply_along_axis(lambda x: np.bincount(x).argmax(), axis=0, arr=tree_predictions)
         return majority_vote
     
     def score(self, X, y):
-        """Evaluate the model on the test data.
-        
+        """
+        Evaluate the model on the test data.
+
         Parameters:
-        X (np.ndarray): Test data.
-        y (np.ndarray): True labels.
-        
+        -----------
+        X : np.ndarray
+            Test data.
+        y : np.ndarray
+            True labels.
+
         Returns:
-        float: Accuracy score.
+        --------
+        float
+            Accuracy score.
         """
         y_pred = self.predict(X)
         return np.mean(y == y_pred)
 
-
-
-
-
-
-from sklearn.utils import resample
-
 class RandomForestRegressor:
-    
+    """
+    Random Forest Regressor.
+
+    Parameters:
+    -----------
+    n_estimators : int, optional (default=100)
+        The number of trees in the forest.
+    max_depth : int, optional (default=1000)
+        The maximum depth of the trees.
+    max_features : str or int, optional (default='sqrt')
+        The number of features to consider when looking for the best split:
+        - If int, then consider `max_features` features at each split.
+        - If 'sqrt', then consider `sqrt(n_features)` features at each split.
+        - If 'log2', then consider `log2(n_features)` features at each split.
+
+    Attributes:
+    -----------
+    n_estimators : int
+        The number of trees in the forest.
+    max_depth : int
+        The maximum depth of the trees.
+    max_features : str or int
+        The number of features to consider when looking for the best split.
+    trees : list
+        List of decision trees in the forest.
+    is_fitted : bool
+        Indicates whether the model has been fitted.
+    """
+
     def __init__(self, n_estimators=100, max_depth=1000, max_features='sqrt'):
-        """Random Forest Regressor.
-        
-        Parameters:
-        n_estimators (int): The number of trees in the forest.
-        max_depth (int): The maximum depth of the trees.
-        max_features (str or int): The number of features to consider when looking for the best split:
-            - If int, then consider `max_features` features at each split.
-            - If 'sqrt', then consider `sqrt(n_features)` features at each split.
-            - If 'log2', then consider `log2(n_features)` features at each split.
-        """
+        """Initialize the Random Forest Regressor."""
         self.n_estimators = n_estimators
         self.max_depth = max_depth
         self.max_features = max_features
@@ -154,11 +196,15 @@ class RandomForestRegressor:
         self.is_fitted = False
 
     def fit(self, X, y):
-        """Fit the random forest model.
-        
+        """
+        Fit the random forest model.
+
         Parameters:
-        X (np.ndarray): Training data.
-        y (np.ndarray): Training labels.
+        -----------
+        X : np.ndarray
+            Training data.
+        y : np.ndarray
+            Training labels.
         """
         self.trees = []
         n_samples, n_features = X.shape
@@ -171,10 +217,7 @@ class RandomForestRegressor:
             max_features = self.max_features
         
         for _ in range(self.n_estimators):
-            # Bootstrap sample
             X_sample, y_sample = resample(X, y)
-            
-            # Create and train a decision tree
             tree = DecisionTreeRegressor(max_depth=self.max_depth)
             tree._find_best_split = self._get_find_best_split(max_features)
             tree.fit(X_sample, y_sample)
@@ -201,18 +244,15 @@ class RandomForestRegressor:
                     right_labels = y[~left_indices]
                     
                     if len(left_labels) == 0 or len(right_labels) == 0:
-                        continue  # Skip if one of the child nodes is empty
+                        continue
                     
-                    # Calculate variance for the child nodes
                     variance_left = np.var(left_labels)
                     variance_right = np.var(right_labels)
                     
-                    # Calculate weighted average variance
                     weight_left = len(left_labels) / len(y)
                     weight_right = len(right_labels) / len(y)
                     weighted_avg_variance = weight_left * variance_left + weight_right * variance_right
                     
-                    # Calculate variance reduction
                     variance_reduction = parent_variance - weighted_avg_variance
                     
                     if variance_reduction > best_variance_reduction:
@@ -224,31 +264,41 @@ class RandomForestRegressor:
         return _find_best_split
 
     def predict(self, X):
-        """Predict values for X.
-        
+        """
+        Predict values for X.
+
         Parameters:
-        X (np.ndarray): Test data.
-        
+        -----------
+        X : np.ndarray
+            Test data.
+
         Returns:
-        np.ndarray: Predicted values.
+        --------
+        np.ndarray
+            Predicted values.
         """
         if not self.is_fitted:
             raise ValueError("The model has not been fitted yet.")
         
         tree_predictions = np.array([tree.predict(X) for tree in self.trees])
-        # Mean of predictions
         mean_predictions = np.mean(tree_predictions, axis=0)
         return mean_predictions
     
     def score(self, X, y):
-        """Evaluate the model on the test data.
-        
+        """
+        Evaluate the model on the test data.
+
         Parameters:
-        X (np.ndarray): Test data.
-        y (np.ndarray): True values.
-        
+        -----------
+        X : np.ndarray
+            Test data.
+        y : np.ndarray
+            True values.
+
         Returns:
-        float: Negative mean squared error.
+        --------
+        float
+            Negative mean squared error.
         """
         y_pred = self.predict(X)
         return -mean_squared_error(y, y_pred)

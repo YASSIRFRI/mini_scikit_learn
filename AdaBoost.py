@@ -5,6 +5,20 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 class DecisionStump():
+    """
+    Decision Stump classifier for decision trees with a maximum depth of one.
+
+    Attributes:
+    -----------
+    polarity : int
+        Indicates the direction of the inequality to compare feature values.
+    feature_index : int
+        The index of the feature used to make the split.
+    threshold : float
+        The threshold value used to split the feature.
+    alpha : float
+        The weight assigned to this classifier in the final prediction.
+    """
     def __init__(self):
         self.polarity = 1
         self.feature_index = None
@@ -12,19 +26,36 @@ class DecisionStump():
         self.alpha = None
 
 class Adaboost():
-    """Boosting method that uses a number of weak classifiers in 
-    ensemble to make a strong classifier. This implementation uses decision
-    stumps, which is a one level Decision Tree. 
+    """
+    Boosting method that uses a number of weak classifiers in ensemble to make a strong classifier.
+    This implementation uses decision stumps, which are one-level decision trees.
 
     Parameters:
     -----------
-    n_clf: int
-        The number of weak classifiers that will be used. 
+    n_clf : int
+        The number of weak classifiers that will be used.
+
+    Attributes:
+    -----------
+    n_clf : int
+        The number of weak classifiers that will be used.
+    clfs : list
+        List to store the weak classifiers (decision stumps) used in the ensemble.
     """
     def __init__(self, n_clf=5):
         self.n_clf = n_clf
 
     def fit(self, X, y):
+        """
+        Fit the model using the given training data.
+
+        Parameters:
+        -----------
+        X : numpy.ndarray
+            The input features of shape (n_samples, n_features).
+        y : numpy.ndarray
+            The target values of shape (n_samples,).
+        """
         n_samples, n_features = np.shape(X)
         w = np.full(n_samples, (1 / n_samples))
         self.clfs = []
@@ -56,6 +87,19 @@ class Adaboost():
             self.clfs.append(clf)
 
     def predict(self, X):
+        """
+        Predict the class labels for the input data.
+
+        Parameters:
+        -----------
+        X : numpy.ndarray
+            The input features of shape (n_samples, n_features).
+
+        Returns:
+        --------
+        y_pred : numpy.ndarray
+            The predicted class labels of shape (n_samples,).
+        """
         n_samples = np.shape(X)[0]
         y_pred = np.zeros((n_samples, 1))
         for clf in self.clfs:
@@ -69,5 +113,3 @@ class Adaboost():
         y_pred = np.sign(y_pred).flatten()
 
         return y_pred
-
-
