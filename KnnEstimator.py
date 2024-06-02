@@ -3,13 +3,32 @@ import Estimator
 import Predictor
 
 class KnnEstimator(Predictor.Predictor, Estimator.Estimator):
+    """
+    K-Nearest Neighbors Estimator.
+
+    Parameters:
+    -----------
+    n_neighbors : int, optional (default=5)
+        The number of neighbors to consider for prediction.
+    p : int, optional (default=2)
+        The order of the Minkowski distance.
+
+    Attributes:
+    -----------
+    n_neighbors : int
+        The number of neighbors to consider for prediction.
+    p : int
+        The order of the Minkowski distance.
+    X_train : numpy.ndarray or None
+        The training data.
+    y_train : numpy.ndarray or None
+        The target values.
+    is_fitted : bool
+        Indicates whether the model has been fitted.
+    """
     
     def __init__(self, n_neighbors=5, p=2):
-        """This is the constructor of the class.
-        Parameters:
-        n_neighbors (int): The number of neighbors to consider for prediction.
-        p (int): The order of the Minkowski distance.
-        """
+        """Initialize the KNN estimator."""
         self.n_neighbors = n_neighbors
         self.p = p
         self.X_train = None
@@ -17,12 +36,20 @@ class KnnEstimator(Predictor.Predictor, Estimator.Estimator):
         self.is_fitted = False
         
     def fit(self, X, y):
-        """This method is used to train the model on the training data.
+        """
+        Train the model on the training data.
+
         Parameters:
-        X (numpy.ndarray): The training data.
-        y (numpy.ndarray): The target values.
+        -----------
+        X : numpy.ndarray
+            The training data.
+        y : numpy.ndarray
+            The target values.
+
         Returns:
-        self: The trained model.
+        --------
+        self : object
+            The trained model.
         """
         self.X_train = X
         self.y_train = y
@@ -30,18 +57,29 @@ class KnnEstimator(Predictor.Predictor, Estimator.Estimator):
         return self
     
     def get_params(self):
-        """This method is used to get the parameters of the model.
+        """
+        Get the parameters of the model.
+
         Returns:
-        dict: The parameters of the model.
+        --------
+        params : dict
+            The parameters of the model.
         """
         return {"n_neighbors": self.n_neighbors, "p": self.p}
     
     def predict(self, X):
-        """This method is used to make predictions on the test data.
+        """
+        Make predictions on the test data.
+
         Parameters:
-        X (numpy.ndarray): The test data.
+        -----------
+        X : numpy.ndarray
+            The test data.
+
         Returns:
-        numpy.ndarray: The predictions.
+        --------
+        y_pred : numpy.ndarray
+            The predictions.
         """
         if not self.is_fitted:
             raise ValueError("The model has not been fitted yet.")
@@ -54,12 +92,19 @@ class KnnEstimator(Predictor.Predictor, Estimator.Estimator):
         return y_pred
     
     def score(self, X, y):
-        """This method is used to evaluate the model on the test data.
+        """
+        Evaluate the model on the test data.
         Parameters:
-        X (numpy.ndarray): The test data.
-        y (numpy.ndarray): The target values.
+        -----------
+        X : numpy.ndarray
+            The test data.
+        y : numpy.ndarray
+            The target values.
+
         Returns:
-        float: The score of the model.
+        --------
+        score : float
+            The score of the model.
         """
         y_pred = self.predict(X)
         return np.mean(y == y_pred)
