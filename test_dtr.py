@@ -3,7 +3,7 @@ from sklearn.datasets import fetch_california_housing
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from sklearn.tree import DecisionTreeRegressor as SklearnDecisionTreeRegressor
-from DecisionTreeRegressor import DecisionTreeRegressor
+from DecisionTree import DecisionTreeRegressor
 
 
 # Load the California housing dataset

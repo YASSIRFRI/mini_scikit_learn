@@ -1,4 +1,4 @@
-from .Estimator import Estimator
+from Estimator import Estimator
 class Predictor(Estimator):
     
     def __init__(self, model=None):

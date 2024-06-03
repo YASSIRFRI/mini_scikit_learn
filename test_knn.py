@@ -1,4 +1,4 @@
-from KnnEtimator import KNNEstimator
+from KnnEstimator import KNNEstimator
 from sklearn.datasets import load_digits, load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier as SklearnKNeighborsClassifier

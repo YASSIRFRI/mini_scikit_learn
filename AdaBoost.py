@@ -1,115 +1,83 @@
 import numpy as np
-import math
-from sklearn import datasets
-import matplotlib.pyplot as plt
-import pandas as pd
+from sklearn.tree import DecisionTreeClassifier
 
-class DecisionStump():
-    """
-    Decision Stump classifier for decision trees with a maximum depth of one.
+class AdaBoostClassifier:
+    def __init__(self, n_estimators=50, learning_rate=1.0):
+        """
+        Initializes the AdaBoost classifier.
 
-    Attributes:
-    -----------
-    polarity : int
-        Indicates the direction of the inequality to compare feature values.
-    feature_index : int
-        The index of the feature used to make the split.
-    threshold : float
-        The threshold value used to split the feature.
-    alpha : float
-        The weight assigned to this classifier in the final prediction.
-    """
-    def __init__(self):
-        self.polarity = 1
-        self.feature_index = None
-        self.threshold = None
-        self.alpha = None
-
-class Adaboost():
-    """
-    Boosting method that uses a number of weak classifiers in ensemble to make a strong classifier.
-    This implementation uses decision stumps, which are one-level decision trees.
-
-    Parameters:
-    -----------
-    n_clf : int
-        The number of weak classifiers that will be used.
-
-    Attributes:
-    -----------
-    n_clf : int
-        The number of weak classifiers that will be used.
-    clfs : list
-        List to store the weak classifiers (decision stumps) used in the ensemble.
-    """
-    def __init__(self, n_clf=5):
-        self.n_clf = n_clf
+        Parameters:
+        - n_estimators: int, number of weak classifiers to use.
+        - learning_rate: float, learning rate to scale the contribution of each classifier.
+        """
+        self.n_estimators = n_estimators
+        self.learning_rate = learning_rate
+        self.models = []
+        self.alphas = []
 
     def fit(self, X, y):
         """
-        Fit the model using the given training data.
+        Trains the AdaBoost classifier.
 
         Parameters:
-        -----------
-        X : numpy.ndarray
-            The input features of shape (n_samples, n_features).
-        y : numpy.ndarray
-            The target values of shape (n_samples,).
+        - X: array-like, shape (n_samples, n_features), training data.
+        - y: array-like, shape (n_samples,), target values.
         """
-        n_samples, n_features = np.shape(X)
-        w = np.full(n_samples, (1 / n_samples))
-        self.clfs = []
-        for _ in range(self.n_clf):
-            clf = DecisionStump()
-            min_error = float('inf')
-            for feature_i in range(n_features):
-                feature_values = np.expand_dims(X[:, feature_i], axis=1)
-                unique_values = np.unique(feature_values)
-                for threshold in unique_values:
-                    p = 1
-                    prediction = np.ones(np.shape(y))
-                    prediction[X[:, feature_i] < threshold] = -1
-                    error = sum(w[y != prediction])
-                    if error > 0.5:
-                        error = 1 - error
-                        p = -1
-                    if error < min_error:
-                        clf.polarity = p
-                        clf.threshold = threshold
-                        clf.feature_index = feature_i
-                        min_error = error
-            clf.alpha = 0.5 * math.log((1.0 - min_error) / (min_error + 1e-10))
-            predictions = np.ones(np.shape(y))
-            negative_idx = (clf.polarity * X[:, clf.feature_index] < clf.polarity * clf.threshold)
-            predictions[negative_idx] = -1
-            w *= np.exp(-clf.alpha * y * predictions)
+        n_samples, n_features = X.shape
+        w = np.ones(n_samples) / n_samples
+
+        for _ in range(self.n_estimators):
+            model = DecisionTreeClassifier(max_depth=1)
+            model.fit(X, y, sample_weight=w)
+            y_pred = model.predict(X)
+            incorrect = (y_pred != y)
+            err = np.dot(w, incorrect) / np.sum(w)
+
+            if err == 0:
+                alpha = np.inf
+            else:
+                alpha = self.learning_rate * np.log((1 - err) / err)
+
+            w *= np.exp(alpha * incorrect)
             w /= np.sum(w)
-            self.clfs.append(clf)
+
+            self.models.append(model)
+            self.alphas.append(alpha)
 
     def predict(self, X):
         """
-        Predict the class labels for the input data.
+        Predicts the class labels for the given data.
 
         Parameters:
-        -----------
-        X : numpy.ndarray
-            The input features of shape (n_samples, n_features).
+        - X: array-like, shape (n_samples, n_features), input data.
 
         Returns:
-        --------
-        y_pred : numpy.ndarray
-            The predicted class labels of shape (n_samples,).
+        - y_pred: array, shape (n_samples,), predicted class labels.
         """
-        n_samples = np.shape(X)[0]
-        y_pred = np.zeros((n_samples, 1))
-        for clf in self.clfs:
-            # Set all predictions to '1' initially
-            predictions = np.ones(np.shape(y_pred))
-            # The indexes where the sample values are below threshold
-            negative_idx = (clf.polarity * X[:, clf.feature_index] < clf.polarity * clf.threshold)
-            predictions[negative_idx] = -1
-            y_pred += clf.alpha * predictions
-
-        y_pred = np.sign(y_pred).flatten()
-
+        model_preds = np.array([model.predict(X) for model in self.models])
+        weighted_preds = np.dot(self.alphas, model_preds)
+        y_pred = np.sign(weighted_preds)
         return y_pred
+
+# Example usage
+if __name__ == "__main__":
+    from sklearn.datasets import load_digits
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import accuracy_score
+
+    # Load dataset
+    digits = load_digits()
+    X, y = digits.data, digits.target
+    y = np.where(y % 2 == 0, 1, -1)  # Convert to binary classification problem
+
+    # Split the data
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
+
+    # Train AdaBoost classifier
+    ada = AdaBoostClassifier(n_estimators=50, learning_rate=1.0)
+    ada.fit(X_train, y_train)
+
+    # Predict and evaluate
+    y_pred = ada.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    print(f"Accuracy of AdaBoost Classifier: {accuracy:.2f}")

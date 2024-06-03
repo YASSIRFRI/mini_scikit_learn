@@ -297,7 +297,7 @@ class StackingEnsembler(Predictor.Predictor, Estimator.Estimator):
         """
         for model in self.base_models:
             model.fit(X, y)
-            print("Accuracy of Model: ",base_models.index(model))
+            print("Accuracy of Model: ",self.base_models.index(model))
             print(model.score(X, y))
         X_meta = np.array([model.predict(X) for model in self.base_models]).T
         self.meta_model.fit(X_meta, y)

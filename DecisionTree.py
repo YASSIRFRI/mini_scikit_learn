@@ -1,6 +1,6 @@
 import numpy as np
-from .Estimator import Estimator
-from .Predictor import Predictor
+from Estimator import Estimator
+from Predictor import Predictor
 
 
 class DecisionTreeClassifier(Predictor, Estimator):

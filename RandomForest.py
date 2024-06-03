@@ -1,7 +1,9 @@
 import numpy as np
-from . import Estimator
-from . import Predictor
-from .DecisionTree import DecisionTreeClassifier, DecisionTreeRegressor
+#from . import Estimator
+import Estimator
+#from . import Predictor
+import Predictor
+from DecisionTree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.utils import resample
 
 class RandomForestClassifier(Predictor.Predictor, Estimator.Estimator):
